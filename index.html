@@ -57,6 +57,7 @@
       align-items: center;
       flex: 0 0 auto;
       justify-content: flex-start;
+      padding-bottom: 0.75rem;
     }
 
     .history-strip {
@@ -174,6 +175,16 @@
     .buttons .plus { border: 1px solid rgba(255,255,255,0.4); }
     .buttons .minus { border: 1px solid rgba(255,255,255,0.4); }
 
+    .brand-label {
+      font-family: 'Orbitron', system-ui, sans-serif;
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: #fff;
+      text-align: center;
+      margin: 0.25rem 0 0;
+      letter-spacing: 0.05em;
+    }
+
     .reset-btn {
       font-family: 'Orbitron', system-ui, sans-serif;
       position: fixed;
@@ -214,6 +225,7 @@
       <button type="button" class="plus" data-delta="15">+15</button>
       <button type="button" class="plus" data-delta="20">+20</button>
     </div>
+    <div class="brand-label" aria-hidden="true">Earlyverse</div>
   </section>
 
   <div class="middle-zone">
@@ -239,6 +251,7 @@
       <button type="button" class="minus" data-delta="-15">−15</button>
       <button type="button" class="minus" data-delta="-20">−20</button>
     </div>
+    <div class="brand-label" aria-hidden="true">Earlyverse</div>
   </section>
 
   <script>
