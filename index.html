@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <title>Early Verse Counter</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      height: 100dvh;
+      max-height: 100vh;
+      max-height: 100dvh;
+      font-family: 'Orbitron', system-ui, sans-serif;
+      overflow: hidden;
+      padding: calc(env(safe-area-inset-top) + 0.5rem) env(safe-area-inset-right) calc(env(safe-area-inset-bottom) + 0.5rem) env(safe-area-inset-left);
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      background-color: rgb(28, 12, 48);
+      background-image: url('bg.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-color 0.2s ease;
+    }
+
+    /* Top block: rotated 180deg so the other player reads it right-side-up. No flex grow – only as tall as its content. */
+    .top-block {
+      transform: rotate(180deg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 0 0 auto;
+      justify-content: flex-end;
+    }
+    /* Middle zone: takes all remaining space and centers the circle */
+    .middle-zone {
+      flex: 1 1 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    /* Bottom block: no flex grow – only as tall as its content. */
+    .bottom-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 0 0 auto;
+      justify-content: flex-start;
+    }
+
+    .history-strip {
+      font-family: 'Orbitron', system-ui, sans-serif;
+      font-size: 1.2rem;
+      opacity: 0.7;
+      max-width: 100%;
+      padding: 0.25rem 0.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      justify-content: center;
+      min-height: 1.5rem;
+    }
+    .history-strip span {
+      white-space: nowrap;
+    }
+    .history-strip .entry-plus { color: rgba(255,255,255,0.9); }
+    .history-strip .entry-minus { color: rgba(255,255,255,0.9); }
+
+    .center-section {
+      flex-shrink: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 0.35rem 0;
+    }
+    .counter-circle {
+      width: min(50vw, 14rem);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 3px solid rgba(255,255,255,0.5);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .circle-half {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 0;
+    }
+    .circle-half.top {
+      align-items: flex-end;
+      padding: 0.15rem 0 2px 0;
+    }
+    .circle-half.bottom {
+      align-items: flex-start;
+      padding: 2px 0 0.15rem 0;
+    }
+    .circle-divider {
+      flex-shrink: 0;
+      height: 2px;
+      width: 100%;
+      background: rgba(255,255,255,0.5);
+      margin: 0;
+    }
+    .counter-value {
+      font-family: 'Orbitron', system-ui, sans-serif;
+      font-size: clamp(2.5rem, 12vw, 5rem);
+      font-weight: 700;
+      line-height: 1.1;
+      margin: 0;
+      color: #fff;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    .counter-value.flip {
+      transform: rotate(180deg);
+    }
+    .counter-value.pulse {
+      animation: pulse 0.8s ease-in-out infinite;
+    }
+    .counter-value.flip.pulse {
+      animation: pulseFlip 0.8s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.08); opacity: 0.9; }
+    }
+    @keyframes pulseFlip {
+      0%, 100% { transform: rotate(180deg) scale(1); opacity: 1; }
+      50% { transform: rotate(180deg) scale(1.08); opacity: 0.9; }
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      padding: 0.5rem;
+    }
+    .buttons button {
+      font-family: 'Orbitron', system-ui, sans-serif;
+      width: 3.75rem;
+      height: 3.75rem;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .buttons button:hover { background: rgba(255,255,255,0.3); }
+    .buttons button:active { background: rgba(255,255,255,0.4); }
+    .buttons .plus { border: 1px solid rgba(255,255,255,0.4); }
+    .buttons .minus { border: 1px solid rgba(255,255,255,0.4); }
+
+    .reset-btn {
+      font-family: 'Orbitron', system-ui, sans-serif;
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      padding: 0.4rem 0.65rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: rgba(255,255,255,0.85);
+      background: transparent;
+      border: 2px solid rgba(255,255,255,0.5);
+      border-radius: 6px;
+      cursor: pointer;
+      z-index: 10;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .reset-btn:hover {
+      color: #fff;
+      border-color: rgba(255,255,255,0.8);
+      background: rgba(255,255,255,0.08);
+    }
+    .reset-btn:active { background: rgba(255,255,255,0.15); }
+    .reset-btn-right { right: 0.5rem; }
+    .reset-btn-left { left: 0.5rem; transform: translateY(-50%) rotate(180deg); }
+  </style>
+</head>
+<body>
+  <button type="button" class="reset-btn reset-btn-left" aria-label="Reset to 50">Reset</button>
+  <button type="button" class="reset-btn reset-btn-right" aria-label="Reset to 50">Reset</button>
+
+  <section class="top-block" aria-label="Top player side">
+    <div class="history-strip" id="history-top" aria-label="Recent moves"></div>
+    <div class="buttons">
+      <button type="button" class="plus" data-delta="1">+1</button>
+      <button type="button" class="plus" data-delta="5">+5</button>
+      <button type="button" class="plus" data-delta="10">+10</button>
+      <button type="button" class="plus" data-delta="15">+15</button>
+      <button type="button" class="plus" data-delta="20">+20</button>
+    </div>
+  </section>
+
+  <div class="middle-zone">
+    <section class="center-section" aria-label="Score">
+      <div class="counter-circle">
+        <div class="circle-half top">
+          <span class="counter-value" id="value-bottom">50</span>
+        </div>
+        <div class="circle-divider" aria-hidden="true"></div>
+        <div class="circle-half bottom">
+          <span class="counter-value flip" id="value-top">50</span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <section class="bottom-block" aria-label="Bottom player side">
+    <div class="history-strip" id="history-bottom" aria-label="Recent moves"></div>
+    <div class="buttons">
+      <button type="button" class="minus" data-delta="-1">−1</button>
+      <button type="button" class="minus" data-delta="-5">−5</button>
+      <button type="button" class="minus" data-delta="-10">−10</button>
+      <button type="button" class="minus" data-delta="-15">−15</button>
+      <button type="button" class="minus" data-delta="-20">−20</button>
+    </div>
+  </section>
+
+  <script>
+    (function () {
+      const MAX_HISTORY = 5;
+      const MIN = 0;
+      const MAX = 100;
+      const INITIAL = 50;
+
+      let value = INITIAL;
+      let history = [];
+
+      const valueTop = document.getElementById('value-top');
+      const valueBottom = document.getElementById('value-bottom');
+      const historyTop = document.getElementById('history-top');
+      const historyBottom = document.getElementById('history-bottom');
+
+      function clamp(v) { return Math.max(MIN, Math.min(MAX, v)); }
+
+      function numberColorFromValue(v) {
+        var r, g, b;
+        if (v <= 50) {
+          var t = v / 50;
+          r = 255;
+          g = Math.round(255 * t);
+          b = Math.round(255 * t);
+        } else {
+          var t = (v - 50) / 50;
+          r = Math.round(255 * (1 - t));
+          g = 255;
+          b = Math.round(255 * (1 - t));
+        }
+        return 'rgb(' + r + ', ' + g + ', ' + b + ')';
+      }
+
+      function renderHistory(container, reverse) {
+        const entries = reverse ? [...history].reverse() : history;
+        container.innerHTML = entries.map(function (entry) {
+          const cls = entry.delta > 0 ? 'entry-plus' : 'entry-minus';
+          const sign = entry.delta > 0 ? '+' : '';
+          return '<span class="' + cls + '">' + sign + entry.delta + '</span>';
+        }).join('');
+      }
+
+      function updateDOM() {
+        const s = String(value);
+        valueTop.textContent = s;
+        valueBottom.textContent = s;
+        valueTop.classList.toggle('pulse', value === MIN || value === MAX);
+        valueBottom.classList.toggle('pulse', value === MIN || value === MAX);
+        var numberColor = numberColorFromValue(value);
+        valueTop.style.color = numberColor;
+        valueBottom.style.color = numberColor;
+        renderHistory(historyTop, true);
+        renderHistory(historyBottom, false);
+      }
+
+      function applyDelta(delta) {
+        const prev = value;
+        value = clamp(value + delta);
+        if (value !== prev) {
+          history.push({ delta: delta, value: value });
+          if (history.length > MAX_HISTORY) history.shift();
+        }
+        updateDOM();
+      }
+
+      function reset() {
+        if (!confirm('Reset to 50?')) return;
+        value = INITIAL;
+        history = [];
+        updateDOM();
+      }
+
+      document.querySelectorAll('.buttons button[data-delta]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const delta = parseInt(btn.getAttribute('data-delta'), 10);
+          applyDelta(delta);
+        });
+      });
+      document.querySelectorAll('.reset-btn').forEach(function (btn) {
+        btn.addEventListener('click', reset);
+      });
+
+      updateDOM();
+    })();
+  </script>
+</body>
+</html>
